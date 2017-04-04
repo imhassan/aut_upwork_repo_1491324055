@@ -1,0 +1,19 @@
+{
+  "name": "aut_upwork_repo_1491324055",
+  "version": "1.0.0",
+  "description": "Module to create, update and delete AWS Lambda functions",
+  "main": "index.js",
+  "scripts": {
+    "test": "for f in test/*.js; do echo \"\nRunning test $f..\n\" && node $f; done"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mattccrampton/aut_upwork_repo_1491324055.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mattccrampton/aut_upwork_repo_1491324055/issues"
+  },
+  "homepage": "https://github.com/mattccrampton/aut_upwork_repo_1491324055#readme"
+}
