@@ -1,11 +1,11 @@
 var app = require('../index')
 
-var lambda_id = "12345"
+var function_name = "mytest";
 
 var event_object = {
   key1 : "value1",
   key2 : "value2",
   key3 : "value3"
 }
-
-app.execute(lambda_id, event_object);
+var event_string = JSON.stringify(event_object);
+app.execute(function_name, event_string);

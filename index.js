@@ -38,15 +38,16 @@ module.exports = {
 
   /**
    * Executes an existing AWS lambda function
-   * @param {string} AWS Lambda function ID
-   * @param {Object} AWS Lambda event object
+   * @param {string} AWS Lambda function Name
+   * @param {string} AWS Lambda event payload in string
    * @returns {Promise} Success promise receives the results of the execution of the AWS lambda function
    */
-  execute : function(lambda_id, event_object){
+  execute : function(function_name, event_string){
     console.log("This function should execute an existing AWS lambda function with the ID:");
-    console.log(lambda_id);
+    console.log(function_name);
     console.log("Using the following event object:");
-    console.log(event_object);
+    console.log(event_string);
+    return helper.executeLambda(function_name,event_string);
   },
 
   /**

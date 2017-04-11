@@ -237,5 +237,46 @@ var deleteLambda = function(functionName) {
 
 	});
 };
+
+/**
+ * Executes an existing AWS lambda function
+ * 
+ * @param {string}
+ *            AWS Lambda function Name
+ * @param {string}
+ *            AWS Lambda event string
+ * @returns {Promise} Success promise receives the results of the execution of the AWS lambda function
+ */
+
+var executeLambda = function(functionName, event_string) {
+	var resp = {
+		status : 0,
+		message : "unable to create function"
+	};
+
+	return new Promise(function(resolve, reject) {
+		var params = {
+			FunctionName : functionName,
+			Payload : event_string
+		};
+		lambda.invoke(params, function(err, data) {
+			if (err) {
+				console.log(err);
+				resp.data = err;
+				return reject(resp);
+			} else {
+				console.log('function executed...');
+				resp.status = 1;
+				resp.message = "Function executed";
+				resp.data = data;
+				console.log(data);
+				return resolve(resp);
+			}
+		});
+
+	});
+};
+
 exports.createNDeploy = createNDeploy;
 exports.deleteLambda = deleteLambda;
+exports.executeLambda = executeLambda;
