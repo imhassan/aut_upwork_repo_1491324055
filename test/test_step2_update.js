@@ -1,8 +1,6 @@
 var app = require('../index')
 
-var lambda_id = "12345"
-
-var npm_packages = ["twitter", "aws-sdk", "underscore"]
+var npm_packages = ["moment", "underscore"]
 
 var javascript_code = "" +
   " exports.handler = function(event, context) { " +
@@ -11,5 +9,5 @@ var javascript_code = "" +
   "   console.log('value3 =', event.key3); " +
   "   context.succeed(event.key1); " +
   " }; ";
-
-app.update(lambda_id, npm_packages, javascript_code);
+var function_name = "mytest";
+app.update(npm_packages, javascript_code, function_name);

@@ -1,6 +1,6 @@
 var app = require('../index')
 
-var lambda_id = "12345"
+var function_name = "mytest"
 
-app.delete(lambda_id);
+app.delete(function_name);
 
