@@ -12,9 +12,8 @@ var aws_security = {
 };
 AWS.config.update(aws_security);
 
-var lambda = new AWS.Lambda({
-	apiVersion : '2015-03-31'
-});
+var lambda = new AWS.Lambda();
+var iam = new AWS.IAM();
 
 /**
  * Clean tmp directory and install the required npm modules.
@@ -101,6 +100,57 @@ var zipFiles = function() {
 
 };
 
+var createLambdaRole = function() {
+	return new Promise(function(resolve, reject) {
+		var params = {
+			RoleName : config.roleName,
+		};
+		iam.getRole(params, function(err, data) {
+			if (err) {
+				// console.log(err, err.stack);
+				// reject(err);
+				console.log('NO Role. Creating new Role');
+
+				params['AssumeRolePolicyDocument'] = JSON.stringify(config.rolePolicyDoc);
+				iam.createRole(params, function(err, data) {
+					if (err) {
+						console.log(err, err.stack); // an error occurred
+						return reject(err);
+					} else {
+						console.log(data);
+						var respData = data;
+						console.log('Attaching Policy Now.');
+						var params = {
+							PolicyDocument : JSON.stringify(config.rolePolicy),
+							PolicyName : 'Lambda_Custom_Policy',
+							RoleName : config.roleName
+						};
+						iam.putRolePolicy(params, function(err, data) {
+							if (err) {
+								console.log(err, err.stack); // an error occurred
+								return reject(err);
+							} else {
+								console.log(data);
+								return resolve(respData);
+							}
+						});
+
+					}
+
+				});
+
+				return;
+			}
+			console.log('Role already exist');
+			console.log(data);
+			return resolve(data);
+
+		});
+
+	});
+
+};
+
 /**
  * upload lambda function to aws. if function already exist with the given name, then it will update the code.
  * 
@@ -111,57 +161,62 @@ var zipFiles = function() {
 var uplaodLambdaFunction = function(functionName) {
 	// console.log(shell.pwd());
 	return new Promise(function(resolve, reject) {
-		lambda.getFunction({
-			'FunctionName' : functionName
-		}, function(err, data) {
-			if (err) {
-				console.log('function ' + functionName + ' does not exist. create new');
-				var params = {
-					Code : {
-						ZipFile : fs.readFileSync("lambda.zip")
-					},
-					Description : "This is function description",
-					FunctionName : functionName,
-					Handler : "index.handler",
-					MemorySize : 128,
-					Publish : true,
-					Role : config.role_arn,
-					Runtime : "nodejs6.10",
-					Timeout : 15,
-					VpcConfig : {}
-				};
-				lambda.createFunction(params, function(err, data) {
-					if (err) {
-						console.log(err);
-						return reject(err);
-					} else {
-						console.log('function created...');
-						console.log(data);
-						return resolve();
-					}
-				});
+		createLambdaRole().then(function(arnResp) {
 
-			} else {
-				console.log('function already exist. updating...');
-				console.log(data);
+			lambda.getFunction({
+				'FunctionName' : functionName
+			}, function(err, data) {
+				if (err) {
+					console.log('function ' + functionName + ' does not exist. create new');
+					var params = {
+						Code : {
+							ZipFile : fs.readFileSync("lambda.zip")
+						},
+						Description : "This is function description",
+						FunctionName : functionName,
+						Handler : "index.handler",
+						MemorySize : 128,
+						Publish : true,
+						Role : arnResp.Role.Arn,
+						Runtime : "nodejs6.10",
+						Timeout : 15,
+						VpcConfig : {}
+					};
+					lambda.createFunction(params, function(err, data) {
+						if (err) {
+							console.log(err);
+							return reject(err);
+						} else {
+							console.log('function created...');
+							console.log(data);
+							return resolve();
+						}
+					});
 
-				var params = {
-					ZipFile : fs.readFileSync("lambda.zip"),
-					FunctionName : functionName
-				};
-				lambda.updateFunctionCode(params, function(err, data) {
-					if (err) {
-						console.log(err);
-						return reject(err);
-					} else {
-						console.log('function updated...');
-						console.log(data);
-						return resolve();
-					}
-				});
+				} else {
+					console.log('function already exist. updating...');
+					console.log(data);
 
-			}
+					var params = {
+						ZipFile : fs.readFileSync("lambda.zip"),
+						FunctionName : functionName
+					};
+					lambda.updateFunctionCode(params, function(err, data) {
+						if (err) {
+							console.log(err);
+							return reject(err);
+						} else {
+							console.log('function updated...');
+							console.log(data);
+							return resolve();
+						}
+					});
+
+				}
+			});
+
 		});
+
 	});
 };
 
@@ -179,7 +234,6 @@ var uplaodLambdaFunction = function(functionName) {
  */
 
 var createNDeploy = function(pkgArr, code, functionName) {
-	// return uplaodLambdaFunction(functionName);
 	var resp = {
 		status : 0,
 		message : "unable to create function"
