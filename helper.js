@@ -131,7 +131,10 @@ var createLambdaRole = function() {
 								return reject(err);
 							} else {
 								console.log(data);
-								return resolve(respData);
+								// adding delay so that new role available for lambda function
+								setTimeout(function(){
+									return resolve(respData);
+								 }, 10000);
 							}
 						});
 
